@@ -1,4 +1,4 @@
-```groovy
+
 pipeline {
     agent any
 
@@ -195,5 +195,5 @@ Argo CD will automatically deploy this version.
         }
     }
 }
-```
+
 
