@@ -139,8 +139,8 @@ pipeline {
                         grep "image:" backend/deployment.yaml
                         grep "image:" frontend/deployment.yaml
 
-                        git config user.name "Jenkins"
-                        git config user.email "jenkins@localhost"
+                        git config user.name "gauravrajlaxmi"
+                        git config user.email "gauravrajlaxmi15@gmail.com"
 
                         git add backend/deployment.yaml frontend/deployment.yaml
 
