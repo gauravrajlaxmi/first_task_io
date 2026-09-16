@@ -1,4 +1,4 @@
-
+```groovy
 pipeline {
     agent any
 
@@ -12,7 +12,6 @@ pipeline {
 
         GITOPS_REPO = 'https://github.com/gauravrajlaxmi/first_task_io_gitops.git'
         GITOPS_BRANCH = 'main'
-
         GITOPS_CREDENTIALS = 'github-gitops'
     }
 
@@ -43,6 +42,7 @@ pipeline {
             steps {
                 dir('backend') {
                     sh '''
+                        set -e
                         npm ci
                         node --check server.js
                     '''
@@ -54,6 +54,7 @@ pipeline {
             steps {
                 dir('frontend') {
                     sh '''
+                        set -e
                         npm ci
                         npm run build
                     '''
@@ -122,16 +123,19 @@ pipeline {
                         set -e
 
                         echo "Updating backend image..."
+
                         sed -i \
                             "s#image: .*two-tier-backend:.*#image: ${ECR_REGISTRY}/${BACKEND_REPO}:${IMAGE_TAG}#" \
                             backend/deployment.yaml
 
                         echo "Updating frontend image..."
+
                         sed -i \
                             "s#image: .*two-tier-frontend:.*#image: ${ECR_REGISTRY}/${FRONTEND_REPO}:${IMAGE_TAG}#" \
                             frontend/deployment.yaml
 
                         echo "Updated image references:"
+
                         grep "image:" backend/deployment.yaml
                         grep "image:" frontend/deployment.yaml
 
@@ -140,39 +144,44 @@ pipeline {
 
                         git add backend/deployment.yaml frontend/deployment.yaml
 
-                        git commit \
-                            -m "Deploy ${IMAGE_TAG}" || echo "No changes to commit"
+                        if git diff --cached --quiet; then
+                            echo "No changes to commit."
+                        else
+                            git commit -m "Deploy ${IMAGE_TAG}"
 
-                        git push origin ${GITOPS_BRANCH}
+                            echo "Pushing changes to GitOps repository..."
+
+                            git push origin HEAD:${GITOPS_BRANCH}
+                        fi
                     '''
                 }
             }
         }
-
     }
 
     post {
 
         success {
             echo """
-            ==========================================
-            CI PIPELINE SUCCESS
-            ==========================================
+==========================================
+CI PIPELINE SUCCESS
+==========================================
 
-            Image tag:
-            ${IMAGE_TAG}
+Image tag:
+${IMAGE_TAG}
 
-            Backend:
-            ${ECR_REGISTRY}/${BACKEND_REPO}:${IMAGE_TAG}
+Backend:
+${ECR_REGISTRY}/${BACKEND_REPO}:${IMAGE_TAG}
 
-            Frontend:
-            ${ECR_REGISTRY}/${FRONTEND_REPO}:${IMAGE_TAG}
+Frontend:
+${ECR_REGISTRY}/${FRONTEND_REPO}:${IMAGE_TAG}
 
-            GitOps repository updated.
+GitOps repository updated.
 
-            Argo CD will automatically deploy this version.
-            ==========================================
-            """
+Argo CD will automatically deploy this version.
+
+==========================================
+"""
         }
 
         failure {
@@ -186,5 +195,5 @@ pipeline {
         }
     }
 }
-
+```
 
